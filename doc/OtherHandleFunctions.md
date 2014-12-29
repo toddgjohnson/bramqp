@@ -34,3 +34,15 @@ The `handle` provides additional functions which perform common but complicated 
 - `frameMax` The new largest frame that should be used;
 
 `setFrameMax` updates the size of the buffers used for AMQP communication.  Should be called after receiving `connection.tune` method.
+
+
+#### handle.validateProps(serverProps)
+
+- `serverProps` The AMQP `server-properties` sent from the server during the `connection.start` method.
+
+This method is not meant to be called by the client but instead should be overridden by the client if needed.  There are numerous AMQP servers in operation with varying uses of the `server-properties` and `client-properties` fields within the `connection.start` and `connection.start-ok` methods, respectively.  For example, Apache QPid's [extensions](https://cwiki.apache.org/confluence/display/qpid/Qpid+extensions+to+AMQP) differ from those of RabbitMQ's [extensions](http://www.rabbitmq.com/consumer-cancel.html#capabilities).
+
+`validateProps` is called by `openAMQPCommunication` and by default it inspects the server's properties and verifies that the server meets RabbitMQ's default [capabilities](http://www.rabbitmq.com/consumer-cancel.html#capabilities) and provides the corresponding client capabilities back to the server.
+
+`validateProps` should be overridden by the client if it needs to negotiate the client-server properties by inspecting the supplied `serverProps` and providing the custom client properties as the return value.  If the client wishes to abort the connection/channel setup due to insufficient server capabilities this function should return an object with an `error` property containing the appropriate error description.  This will cause `openAMQPCommunication` to stop processing the connection and call back with the error value set.
+
